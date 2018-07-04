@@ -47,7 +47,7 @@ public class MouseOrbitImproved: MonoBehaviour {
     {
         if (!target) return;
         
-        // Get mouse input and alter the camera rotation
+        // Get mouse input and alter the camera rotation **MATT can we make the X axis here rotate the character? would we need a new basic scrip like the herox script just to rotate the character with mouse on x axis?
         x += Input.GetAxis("Mouse X") * xSpeed * distance * 0.02f;
         y -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
  
