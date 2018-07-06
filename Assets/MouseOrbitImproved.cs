@@ -1,71 +1,67 @@
-﻿using System.Net.Mail;
-using UnityEngine;
+﻿using UnityEngine;
  
 public class MouseOrbitImproved: MonoBehaviour {
- 
     // The thing we are looking at
-    public Transform target;
+    public Transform Target;
     
     // Distance away from the thing we are looking at
-    public float distance = 5.0f;
-    public float xSpeed = 120.0f;
-    public float ySpeed = 120.0f;
+    public float Distance = 5.0f;
+    public float YSpeed = 120.0f;
  
     // Y axis is up/down.
     // When tilting to look up, how far down can we tilt (stops camera going underground)?
-    public float yMinLimit = -20f;
+    public float YMinLimit = -20f;
     // When tilting to look down, how far up can we go?
-    public float yMaxLimit = 80f;
+    public float YMaxLimit = 80f;
  
     // Closest we can be to the thing we are looking at
-    public float distanceMin = .5f;
+    public float DistanceMin = .5f;
     // Furthest out we can be from the thing we are looking at
-    public float distanceMax = 15f;
+    public float DistanceMax = 15f;
  
-    private Rigidbody rigidbody;
+    private Rigidbody _rigidbody;
  
-    float x = 0.0f;
-    float y = 0.0f;
+    private float _y;
  
     // Use this for initialization
     void Start () 
     {
         Vector3 angles = transform.eulerAngles;
-        x = angles.y;
-        y = angles.x;
+        // Not sure why the original script swaps x and y. Perhaps mouse vs Euler.
+        _y = angles.x;
  
-        rigidbody = GetComponent<Rigidbody>();
+        _rigidbody = GetComponent<Rigidbody>();
  
         // Make the rigid body not change rotation
-        if (rigidbody != null)
+        if (_rigidbody != null)
         {
-            rigidbody.freezeRotation = true;
+            _rigidbody.freezeRotation = true; // Physics will not rotate the thing. Only this script.
         }
     }
  
     void LateUpdate () 
     {
-        if (!target) return;
+        if (!Target) return;
         
-        // Get mouse input and alter the camera rotation **MATT can we make the X axis here rotate the character? would we need a new basic scrip like the herox script just to rotate the character with mouse on x axis?
-        x += Input.GetAxis("Mouse X") * xSpeed * distance * 0.02f;
-        y -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
+        _y -= Input.GetAxis("Mouse Y") * YSpeed * 0.02f;
+        _y = ClampAngle(_y, YMinLimit, YMaxLimit); // Limit up and down movement
  
-        y = ClampAngle(y, yMinLimit, yMaxLimit); // Limit up and down movement
- 
-        Quaternion rotation = Quaternion.Euler(y, x, 0); // 0 here constrains us to no camera roll. It's always vertical.
+        // Takes degrees as arguments.
+        // Mouse Y != Euler Y
+        // Camera rotates around its target, not it's own position in space.
+        Quaternion rotation = Quaternion.Euler(_y, Target.eulerAngles.y, 0); // 0 here constrains us to no camera roll. It's always vertical.
  
         // Get the change in mouse wheel scroll and alter our zoom distance
-        distance = Mathf.Clamp(distance - Input.GetAxis("Mouse ScrollWheel")*5, distanceMin, distanceMax);
+        Distance = Mathf.Clamp(Distance - Input.GetAxis("Mouse ScrollWheel") * 5, DistanceMin, DistanceMax);
  
         // Do not allow us to collide with anything??
         RaycastHit hit;
-        if (Physics.Linecast (target.position, transform.position, out hit)) 
+        if (Physics.Linecast (Target.position, transform.position, out hit)) 
         {
-            distance -=  hit.distance;
+            Distance -=  hit.distance;
         }
-        Vector3 negDistance = new Vector3(0.0f, 0.0f, -distance);
-        Vector3 position = rotation * negDistance + target.position;
+        Vector3 negDistance = new Vector3(0.0f, 0.0f, -Distance);
+        Vector3 position = rotation * negDistance + Target.position;
  
         // Add the new rotation and position the the transform which will be applied to the target 
         transform.rotation = rotation;
